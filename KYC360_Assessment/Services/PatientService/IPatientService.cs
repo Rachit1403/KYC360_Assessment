@@ -7,10 +7,10 @@ namespace KYC360_Assessment.Services.PatientService
     public interface IPatientService
     {
         //Task<List<Patient>> GetAllPatients();
-        Task<List<Patient>> GetAllPatients(string? search, string? gender, DateTime? startDate, DateTime? endDate, List<String>? countries, int page, int pageSize, string sortBy, bool desc);
-        Task<Patient> GetPatientById(int id);
-        Task<List<Patient>> AddPatient(PatientCreateDto newPatient);
-        Task<Patient> UpdatePatient(PatientUpdateDto updatedPatient);
-        Task<List<Patient>> DeletePatient(int id);
+        Task<ServiceResponse<List<Patient>>> GetAllPatients(string? search, string? gender, DateTime? startDate, DateTime? endDate, List<String>? countries, int page, int pageSize, string sortBy, bool desc);
+        Task<ServiceResponse<Patient>> GetPatientById(int id);
+        Task<ServiceResponse<List<Patient>>> AddPatient(PatientCreateDto newPatient);
+        Task<ServiceResponse<Patient>> UpdatePatient(PatientUpdateDto updatedPatient);
+        Task<ServiceResponse<List<Patient>>> DeletePatient(int id);
     }
 }

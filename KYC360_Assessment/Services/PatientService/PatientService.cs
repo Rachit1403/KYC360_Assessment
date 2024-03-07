@@ -44,9 +44,10 @@ namespace KYC360_Assessment.Services.PatientService
             return patients;
         } */
 
-        public async Task<List<Patient>> GetAllPatients(string? search, string? gender, DateTime? startDate, DateTime? endDate, List<String>? countries,
+        public async Task<ServiceResponse<List<Patient>>> GetAllPatients(string? search, string? gender, DateTime? startDate, DateTime? endDate, List<String>? countries,
                                                         int page, int pageSize, string sortBy, bool desc)
         {
+            var serviceResponse = new ServiceResponse<List<Patient>>();
             // If no search parameter is provided, return all patients
             var query = _context.Patients
                 .Include(patient => patient.Addresses)
@@ -97,22 +98,40 @@ namespace KYC360_Assessment.Services.PatientService
                 .Take(pageSize)
                 .ToListAsync();
 
-            return paginatedPatients;
+            serviceResponse.Data = paginatedPatients;
+            return serviceResponse;
         }
 
-        public async Task<Patient> GetPatientById(int id)
+        public async Task<ServiceResponse<Patient>> GetPatientById(int id)
         {
-            var patient = await _context.Patients
+            var serviceResponse = new ServiceResponse<Patient>();
+            try
+            {
+                var patient = await _context.Patients
                 .Include(c => c.Names)
                 .Include(c => c.Addresses)
                 .Include(c => c.Dates)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
-            return patient;
+                if(patient is null)
+                {
+                    throw new Exception($"Patient with ID:{id} not found!!!");
+                }
+                serviceResponse.Data = patient;
+            }
+            catch(Exception ex)
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = ex.Message;
+            }
+            
+
+            return serviceResponse;
         }
 
-        public async Task<List<Patient>> AddPatient(PatientCreateDto request)
+        public async Task<ServiceResponse<List<Patient>>> AddPatient(PatientCreateDto request)
         {
+            var serviceResponse = new ServiceResponse<List<Patient>>();
             var newPatient = new Patient
             {
                 Deceased = request.Deceased,
@@ -130,37 +149,68 @@ namespace KYC360_Assessment.Services.PatientService
             _context.Patients.Add(newPatient);
             await _context.SaveChangesAsync();
 
-            return await _context.Patients
+            serviceResponse.Data = await _context.Patients
                 .Include(c => c.Names)
                 .Include(c => c.Addresses)
                 .Include(c => c.Dates)
                 .ToListAsync();
 
-        }
-
-        public async Task<Patient> UpdatePatient(PatientUpdateDto request)
-        {
-            var patient = await _context.Patients.FirstOrDefaultAsync(c => c.Id == request.Id);
-            patient.Deceased = request.Deceased;
-            patient.Gender = request.Gender;
-
-            await _context.SaveChangesAsync();
-
-            return patient;
+            return serviceResponse;
 
         }
 
-        public async Task<List<Patient>> DeletePatient(int id)
+        public async Task<ServiceResponse<Patient>> UpdatePatient(PatientUpdateDto request)
         {
-            var patient = await _context.Patients.FirstOrDefaultAsync(c => c.Id == id);
-            _context.Patients.Remove(patient);
-            await _context.SaveChangesAsync();
+            var serviceResponse = new ServiceResponse<Patient>();
+            try
+            {
+                var patient = await _context.Patients
+                    .Include(c => c.Names)
+                    .Include(c => c.Addresses)
+                    .Include(c => c.Dates)
+                    .FirstOrDefaultAsync(c => c.Id == request.Id);
+                if (patient is null)
+                {
+                    throw new Exception($"Patient with ID:{request.Id} not found!!!");
+                }
+                patient.Deceased = request.Deceased;
+                patient.Gender = request.Gender;
+                await _context.SaveChangesAsync();
+                serviceResponse.Data = patient;
+            }
+            catch (Exception ex)
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = ex.Message;
+            }
 
-            return await _context.Patients
-                .Include(c => c.Names)
-                .Include(c => c.Addresses)
-                .Include(c => c.Dates)
-                .ToListAsync();
+            return serviceResponse;
+
+        }
+
+        public async Task<ServiceResponse<List<Patient>>> DeletePatient(int id)
+        {
+            var serviceResponse = new ServiceResponse<List<Patient>>();
+            try
+            {
+                var patient = await _context.Patients.FirstOrDefaultAsync(c => c.Id == id);
+                if(patient is null) throw new Exception($"Patient with ID:{id} not found!!!");
+                _context.Patients.Remove(patient);
+                await _context.SaveChangesAsync();
+                serviceResponse.Data = await _context.Patients
+                    .Include(c => c.Names)
+                    .Include(c => c.Addresses)
+                    .Include(c => c.Dates)
+                    .ToListAsync();
+            }
+            catch(Exception ex)
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = ex.Message;
+            }
+
+
+            return serviceResponse;
 
         }
 

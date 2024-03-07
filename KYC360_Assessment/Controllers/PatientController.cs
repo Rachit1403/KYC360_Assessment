@@ -23,7 +23,7 @@ namespace KYC360_Assessment.Controllers
 
        
         [HttpGet("GetAll")]
-        public async Task<ActionResult<List<Patient>>> Get([FromQuery] string? search,
+        public async Task<ActionResult<ServiceResponse<List<Patient>>>> Get([FromQuery] string? search,
             [FromQuery] string? gender ,
             [FromQuery] DateTime? startDate,
             [FromQuery] DateTime? endDate,
@@ -38,30 +38,32 @@ namespace KYC360_Assessment.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Patient>> GetSingle(int id)
+        public async Task<ActionResult<ServiceResponse<Patient>>> GetSingle(int id)
         {
             var response = await _patientService.GetPatientById(id);
-            if(response is null) return NotFound($"ID : {id} not found");
+            if(response.Data is null) return NotFound(response);
             return Ok(response);
         }
 
         [HttpPost]
-        public async Task<ActionResult<List<Patient>>> Add(PatientCreateDto request)
+        public async Task<ActionResult<ServiceResponse<List<Patient>>>> Add(PatientCreateDto request)
         {
             return Ok(await _patientService.AddPatient(request));
         }
 
         [HttpPut]
-        public async Task<ActionResult<Patient>> Update(PatientUpdateDto request)
+        public async Task<ActionResult<ServiceResponse<Patient>>> Update(PatientUpdateDto request)
         {
-            return Ok(await _patientService.UpdatePatient(request));
+            var response = await _patientService.UpdatePatient(request);
+            if (response.Data is null) return NotFound(response);
+            return Ok(response);
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult<List<Patient>>> Delete(int id)
         {
             var response = await _patientService.DeletePatient(id);
-            if (response is null) return NotFound($"ID : {id} not found");
+            if (response.Data is null) return NotFound(response);
             return Ok(response);
         }
     }
